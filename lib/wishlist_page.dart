@@ -580,63 +580,82 @@ class _ProductImage
     // NETWORK IMAGE
     // --------------------------------------------------------------
     if (product.isNetworkImage) {
-      return Image.network(
-        product.image,
+      return Container(
         width: double.infinity,
         height: double.infinity,
+        color: AppColors.light,
+        child: Image.network(
+          product.image,
+          width: double.infinity,
+          height: double.infinity,
 
-        fit: BoxFit.cover,
+          // FIX: `cover` was force-filling the frame and cropping
+          // off the top of the photo (the model's face). `contain`
+          // shows the full image, anchored to the top so the face
+          // is always visible — same as the home page cards.
+          fit: BoxFit.contain,
+          alignment: Alignment.topCenter,
 
-        errorBuilder:
-            (_, __, ___) {
-          return _placeholder();
-        },
+          errorBuilder:
+              (_, __, ___) {
+            return _placeholder();
+          },
 
-        loadingBuilder: (
-          context,
-          child,
-          loadingProgress,
-        ) {
-          if (loadingProgress ==
-              null) {
-            return child;
-          }
+          loadingBuilder: (
+            context,
+            child,
+            loadingProgress,
+          ) {
+            if (loadingProgress ==
+                null) {
+              return child;
+            }
 
-          return Container(
-            color:
-                AppColors.light,
-            alignment:
-                Alignment.center,
-            child:
-                const SizedBox(
-              width: 20,
-              height: 20,
+            return Container(
+              color:
+                  AppColors.light,
+              alignment:
+                  Alignment.center,
               child:
-                  CircularProgressIndicator(
-                strokeWidth: 2,
-                color:
-                    AppColors.primary,
+                  const SizedBox(
+                width: 20,
+                height: 20,
+                child:
+                    CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color:
+                      AppColors.primary,
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       );
     }
 
     // --------------------------------------------------------------
     // ASSET IMAGE
     // --------------------------------------------------------------
-    return Image.asset(
-      product.image,
+    return Container(
       width: double.infinity,
       height: double.infinity,
+      color: AppColors.light,
+      child: Image.asset(
+        product.image,
+        width: double.infinity,
+        height: double.infinity,
 
-      fit: BoxFit.cover,
+        // FIX: same crop issue as the network image branch above —
+        // `contain` + top alignment keeps the full photo (face
+        // included) visible instead of `cover` cutting it off.
+        fit: BoxFit.contain,
+        alignment: Alignment.topCenter,
 
-      errorBuilder:
-          (_, __, ___) {
-        return _placeholder();
-      },
+        errorBuilder:
+            (_, __, ___) {
+          return _placeholder();
+        },
+      ),
     );
   }
 

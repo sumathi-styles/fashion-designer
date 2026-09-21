@@ -1691,38 +1691,29 @@ class _HomePageState extends State<HomePage> {
               ),
             )
           else
-            LayoutBuilder(
-              builder:
-                  (context, constraints) {
-                const gap = 10.0;
+            SizedBox(
+              height: 232,
+              child: ListView.separated(
+                scrollDirection:
+                    Axis.horizontal,
+                physics:
+                    const BouncingScrollPhysics(),
+                itemCount:
+                    _featuredProducts
+                        .length,
+                separatorBuilder:
+                    (_, __) =>
+                        const SizedBox(
+                  width: 10,
+                ),
+                itemBuilder:
+                    (context, i) {
+                  final product =
+                      _featuredProducts[i];
 
-                final cardWidth =
-                    (constraints.maxWidth -
-                            (gap * 2)) /
-                        3;
-
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics:
-                      const NeverScrollableScrollPhysics(),
-                  itemCount:
-                      _featuredProducts
-                          .length,
-                  gridDelegate:
-                      SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing:
-                        gap,
-                    mainAxisSpacing: 12,
-                    childAspectRatio:
-                        cardWidth / 205,
-                  ),
-                  itemBuilder:
-                      (context, i) {
-                    final product =
-                        _featuredProducts[i];
-
-                    return RevealOnScroll(
+                  return SizedBox(
+                    width: 140,
+                    child: RevealOnScroll(
                       tag:
                           'featured_${product.id}_$i',
                       child:
@@ -1730,10 +1721,10 @@ class _HomePageState extends State<HomePage> {
                         product,
                         state,
                       ),
-                    );
-                  },
-                );
-              },
+                    ),
+                  );
+                },
+              ),
             ),
         ],
       ),

@@ -285,25 +285,30 @@ class CartPage extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: product.isNetworkImage
-                      ? Image.network(
-                          product.image,
-                          width: 82,
-                          height: 82,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
-                            return _imagePlaceholder();
-                          },
-                        )
-                      : Image.asset(
-                          product.image,
-                          width: 82,
-                          height: 82,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
-                            return _imagePlaceholder();
-                          },
-                        ),
+                  child: Container(
+                    width: 82,
+                    height: 82,
+                    color: AppColors.gray.withValues(alpha: 0.25),
+                    child: product.isNetworkImage
+                        ? Image.network(
+                            product.image,
+                            width: 82,
+                            height: 82,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) {
+                              return _imagePlaceholder();
+                            },
+                          )
+                        : Image.asset(
+                            product.image,
+                            width: 82,
+                            height: 82,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) {
+                              return _imagePlaceholder();
+                            },
+                          ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1041,28 +1046,30 @@ class _CartProductDetailsPageState extends State<CartProductDetailsPage> {
 
   // ================================================================
   // PRODUCT IMAGE
+  // Uses BoxFit.contain (instead of cover) inside a taller frame so the
+  // ENTIRE portrait photo — including the model's face at the top — is
+  // always visible, never cropped.
   // ================================================================
 
   Widget _buildProductImage() {
-    return AspectRatio(
-      aspectRatio: 4 / 3,
-      child: Container(
-        width: double.infinity,
-        color: Colors.white,
-        child: product.isNetworkImage
-            ? Image.network(
-                product.image,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _imagePlaceholder(),
-              )
-            : Image.asset(
-                product.image,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _imagePlaceholder(),
-              ),
-      ),
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 320, maxHeight: 480),
+      color: Colors.white,
+      alignment: Alignment.center,
+      child: product.isNetworkImage
+          ? Image.network(
+              product.image,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => _imagePlaceholder(),
+            )
+          : Image.asset(
+              product.image,
+              width: double.infinity,
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => _imagePlaceholder(),
+            ),
     );
   }
 
@@ -1070,6 +1077,7 @@ class _CartProductDetailsPageState extends State<CartProductDetailsPage> {
     return Container(
       color: AppColors.gray,
       alignment: Alignment.center,
+      height: 320,
       child: const Icon(
         Icons.image_not_supported_outlined,
         size: 44,
@@ -1569,4 +1577,4 @@ class _CartProductDetailsPageState extends State<CartProductDetailsPage> {
       ),
     );
   }
-} 
+}

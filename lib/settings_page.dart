@@ -1953,11 +1953,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   height: 56,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(10)),
-                  child: o.productImage.trim().isEmpty
+                                    child: o.productImage.trim().isEmpty
                       ? const Icon(Icons.checkroom, color: AppColors.primary)
                       : Image.network(
                           o.productImage,
                           fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
                           errorBuilder: (_, __, ___) =>
                               const Icon(Icons.checkroom, color: AppColors.primary),
                           loadingBuilder: (context, child, progress) {
@@ -5094,9 +5095,10 @@ class _BulletLine extends StatelessWidget {
                     height: 56,
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(10)),
-                    child: order.productImage.trim().isEmpty
+                                       child: order.productImage.trim().isEmpty
                         ? const Icon(Icons.checkroom, color: AppColors.primary)
                         : Image.network(order.productImage, fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
                             errorBuilder: (_, __, ___) => const Icon(Icons.checkroom, color: AppColors.primary)),
                   ),
                   const SizedBox(width: 14),
@@ -5194,9 +5196,10 @@ class _BulletLine extends StatelessWidget {
                     height: 40,
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(color: AppColors.gray, borderRadius: BorderRadius.circular(8)),
-                    child: order.productImage.trim().isEmpty
+                                       child: order.productImage.trim().isEmpty
                         ? const Icon(Icons.checkroom, color: AppColors.primary, size: 18)
                         : Image.network(order.productImage, fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
                             errorBuilder: (_, __, ___) => const Icon(Icons.checkroom, color: AppColors.primary, size: 18)),
                   ),
                   const SizedBox(width: 12),

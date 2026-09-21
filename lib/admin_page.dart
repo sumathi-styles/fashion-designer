@@ -1479,11 +1479,20 @@ class _AdminPageState extends State<AdminPage> {
                 if (image.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      image,
+                    child: Container(
                       height: 180,
                       width: double.infinity,
-                      fit: BoxFit.cover,
+                      color: tealLight,
+                      // FIX: was BoxFit.cover, which cropped the top of
+                      // the photo (the model's face). contain + top
+                      // alignment keeps the full photo visible.
+                      child: Image.network(
+                        image,
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.topCenter,
+                      ),
                     ),
                   ),
                 const SizedBox(height: 12),
@@ -3306,32 +3315,43 @@ class _AdminPageState extends State<AdminPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
+                          // FIX: this used `BoxFit.cover`, which forces the
+                          // photo to fill the frame and crops off the top
+                          // of the image — cutting the model's face out of
+                          // the "All Products" cards. `contain` + top
+                          // alignment (on a background-filled Container)
+                          // keeps the whole photo, face included, visible.
                           child: image.isNotEmpty
-                              ? Image.network(
-                                  image,
+                              ? Container(
                                   width: double.infinity,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, progress) {
-                                    if (progress == null) return child;
-                                    return Container(
-                                      color: tealLight,
-                                      child: const Center(
-                                        child: SizedBox(
-                                          width: 22,
-                                          height: 22,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
+                                  color: tealLight,
+                                  child: Image.network(
+                                    image,
+                                    width: double.infinity,
+                                    fit: BoxFit.contain,
+                                    alignment: Alignment.topCenter,
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return Container(
+                                        color: tealLight,
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (_, __, ___) => Container(
-                                    color: tealLight,
-                                    child: const Center(
-                                      child: Text(
-                                        '👗',
-                                        style: TextStyle(fontSize: 36),
+                                      );
+                                    },
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: tealLight,
+                                      child: const Center(
+                                        child: Text(
+                                          '👗',
+                                          style: TextStyle(fontSize: 36),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -4279,16 +4299,19 @@ class _AdminPageState extends State<AdminPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: image.isNotEmpty
-                          ? Image.network(
-                              image,
+                          ? Container(
                               width: 48,
                               height: 48,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                              color: tealLight,
+                              child: Image.network(
+                                image,
                                 width: 48,
                                 height: 48,
-                                color: tealLight,
-                                child: const Center(child: Text('👗')),
+                                fit: BoxFit.contain,
+                                alignment: Alignment.topCenter,
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Text('👗'),
+                                ),
                               ),
                             )
                           : Container(
