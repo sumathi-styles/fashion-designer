@@ -182,7 +182,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       'https://fashion-designer-lime.vercel.app/api/verifyPayment';
 
   // Razorpay Key ID (public, safe to keep in the app).
-  static const String razorpayKeyId = 'rzp_test_TdoAh7mbMyni2j';
+  static const String razorpayKeyId = 'rzp_live_Tf5OaRI34pvsH9';
 
   // -------------------------------------------------------------------
   // DELIVERY CHARGE
