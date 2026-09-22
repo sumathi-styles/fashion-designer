@@ -190,7 +190,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   //
   // Free delivery above this order value; otherwise a flat fee applies.
   static const double freeDeliveryThreshold = 499;
-  static const double deliveryFee = 40;
+  static const double deliveryFee = 1;
 
   // -------------------------------------------------------------------
   // INIT
