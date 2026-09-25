@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
 import 'services/onesignal_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -32,6 +33,13 @@ void main() async {
 
   OneSignalService.instance.initialize('e2ba850f-0954-4c0a-8360-c17abbff7acf');
   OneSignalService.instance.setRoleTag('customer');
+
+  // Initialize MSG91 OTP Widget — must happen before runApp,
+  // so it's ready when the login screen calls sendOTP/verifyOTP.
+  OTPWidget.initializeWidget(
+    '3669786e7435383131343834',      // widgetId
+    '573884T1J68w0qcnh6ab541bcP1',   // authToken
+  );
 
   runApp(const MyApp());
 }

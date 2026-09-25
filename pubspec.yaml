@@ -61,6 +61,7 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.1
   public_file_saver: ^1.2.0
+  sendotp_flutter_sdk: ^0.0.2
 
 dev_dependencies:
   flutter_test:
