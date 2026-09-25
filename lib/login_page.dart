@@ -1,7 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
 import 'main_nav_page.dart';
 import 'otp_verify_page.dart';
 import 'app_state.dart';
@@ -24,14 +24,11 @@ class _LoginPageState extends State<LoginPage> {
   final Color lightTeal = const Color(0xff4FC3B0);
   final Color gold = const Color(0xffD4AF37);
 
+  bool isSendingOtp = false;
+
   // India only
   static const String _countryCode = '+91';
   static const int _mobileLength = 10;
-
-  String _generateOtp() {
-    final rand = Random();
-    return (100000 + rand.nextInt(900000)).toString();
-  }
 
   Future<void> _completeLogin() async {
     final prefs = await SharedPreferences.getInstance();
@@ -55,28 +52,67 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _startLogin() {
-    if (_formKey.currentState!.validate()) {
-      final otp = _generateOtp();
+  Future<void> _startLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (isSendingOtp) return;
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OtpVerifyPage(
-            phoneNumber: '$_countryCode ${mobileController.text.trim()}',
-            correctOtp: otp,
-            onVerified: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Login Successful"),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              _completeLogin();
-            },
+    setState(() {
+      isSendingOtp = true;
+    });
+
+    final mobile = mobileController.text.trim();
+    final data = {'identifier': '91$mobile'};
+
+    try {
+      final response = await OTPWidget.sendOTP(data);
+      debugPrint('sendOTP response: $response');
+
+      if (!mounted) return;
+
+      if (response != null && response['type'] == 'success') {
+        final reqId = response['message'];
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OtpVerifyPage(
+              phoneNumber: '$_countryCode ${mobile}',
+              reqId: reqId,
+              onVerified: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Login Successful"),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                _completeLogin();
+              },
+            ),
           ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to send OTP. Please try again."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('sendOTP error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Something went wrong. Please try again."),
+          backgroundColor: Colors.redAccent,
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSendingOtp = false;
+        });
+      }
     }
   }
 
@@ -408,11 +444,20 @@ class _LoginPageState extends State<LoginPage> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
-                                onPressed: _startLogin,
-                                icon: const Icon(Icons.sms_outlined),
-                                label: const Text(
-                                  "LOGIN",
-                                  style: TextStyle(
+                                onPressed: isSendingOtp ? null : _startLogin,
+                                icon: isSendingOtp
+                                    ? const SizedBox(
+                                        height: 18,
+                                        width: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(Icons.sms_outlined),
+                                label: Text(
+                                  isSendingOtp ? "SENDING OTP..." : "LOGIN",
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                     letterSpacing: 2,

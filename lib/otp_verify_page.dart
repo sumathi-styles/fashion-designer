@@ -1,15 +1,16 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
 
 class OtpVerifyPage extends StatefulWidget {
   final String phoneNumber;
-  final String correctOtp;
+  final String reqId;
   final VoidCallback onVerified;
 
   const OtpVerifyPage({
     super.key,
     required this.phoneNumber,
-    required this.correctOtp,
+    required this.reqId,
     required this.onVerified,
   });
 
@@ -49,8 +50,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
   // ------------------------------------------------------------
   // LOGO ASSET PATH
   // ------------------------------------------------------------
-  // Add this image to your project (e.g. assets/images/logo.png)
-  // and register it under `flutter -> assets` in pubspec.yaml.
   static const String logoAsset = 'assets/images/app.png';
 
   @override
@@ -82,7 +81,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
     );
 
     // ----------------------------------------------------------
-    // SCISSOR ANIMATION (kept for arrow-nudge + footer motifs)
+    // SCISSOR ANIMATION
     // ----------------------------------------------------------
 
     _scissorController = AnimationController(
@@ -119,110 +118,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
 
     _mainAnimationController.forward();
 
-    // ----------------------------------------------------------
-    // DEMO OTP POPUP
-    // ----------------------------------------------------------
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      showDialog(
-        context: context,
-        barrierColor: Colors.black.withValues(alpha: 0.75),
-        builder: (_) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: gold.withValues(alpha: 0.35),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: gold.withValues(alpha: 0.15),
-                    blurRadius: 35,
-                    spreadRadius: 3,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logo badge (replaces the old scissor icon)
-                  _logoBadge(size: 62),
-
-                  const SizedBox(height: 18),
-
-                  const Text(
-                    "DEMO OTP",
-                    style: TextStyle(
-                      color: gold,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Text(
-                    widget.correctOtp,
-                    style: const TextStyle(
-                      color: cream,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 7,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  const Text(
-                    "This OTP is shown only\nfor demo/testing.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: greyText,
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: gold,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text(
-                        "CONTINUE",
-                        style: TextStyle(
-                          color: background,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    });
+    // Demo OTP popup removed — real SMS is sent by MSG91 now.
   }
 
   // ------------------------------------------------------------
@@ -241,13 +137,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
       return;
     }
 
-    if (otp != widget.correctOtp) {
-      setState(() {
-        errorText = "Incorrect OTP. Please try again.";
-      });
-      return;
-    }
-
     FocusScope.of(context).unfocus();
 
     setState(() {
@@ -255,25 +144,43 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
       errorText = null;
     });
 
-    await Future.delayed(
-      const Duration(milliseconds: 700),
-    );
+    try {
+      final data = {'reqId': widget.reqId, 'otp': otp};
+      final response = await OTPWidget.verifyOTP(data);
+      debugPrint('verifyOTP response: $response');
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      isVerified = true;
-    });
+      if (response != null && response['type'] == 'success') {
+        setState(() {
+          isVerified = true;
+        });
 
-    _successController.forward();
+        _successController.forward();
 
-    await Future.delayed(
-      const Duration(milliseconds: 1200),
-    );
+        await Future.delayed(const Duration(milliseconds: 1200));
 
-    if (!mounted) return;
+        if (!mounted) return;
 
-    widget.onVerified();
+        widget.onVerified();
+      } else {
+        setState(() {
+          errorText = "Incorrect OTP. Please try again.";
+        });
+      }
+    } catch (e) {
+      debugPrint('verifyOTP error: $e');
+      if (!mounted) return;
+      setState(() {
+        errorText = "Something went wrong. Please try again.";
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          isVerifying = false;
+        });
+      }
+    }
   }
 
   // ------------------------------------------------------------
@@ -304,7 +211,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
   }
 
   // ------------------------------------------------------------
-  // ROUND LOGO BADGE (replaces the old animated scissor icon)
+  // ROUND LOGO BADGE
   // ------------------------------------------------------------
 
   Widget _logoBadge({double size = 84}) {
@@ -339,7 +246,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
               logoAsset,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                // Fallback if the asset hasn't been wired up yet.
                 return Container(
                   color: cardColor,
                   alignment: Alignment.center,
@@ -653,15 +559,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
 
       body: Stack(
         children: [
-          // ------------------------------------------------------
-          // FASHION BACKGROUND
-          // ------------------------------------------------------
-
           _fashionBackground(size),
-
-          // ------------------------------------------------------
-          // TOP RIGHT GLOW
-          // ------------------------------------------------------
 
           Positioned(
             top: -160,
@@ -685,10 +583,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
             ),
           ),
 
-          // ------------------------------------------------------
-          // BOTTOM LEFT GLOW
-          // ------------------------------------------------------
-
           Positioned(
             bottom: -190,
             left: -160,
@@ -706,10 +600,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
           SafeArea(
             child: Column(
               children: [
-                // ------------------------------------------------
-                // TOP BAR
-                // ------------------------------------------------
-
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -772,10 +662,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
                   ),
                 ),
 
-                // ------------------------------------------------
-                // MAIN CONTENT
-                // ------------------------------------------------
-
                 Expanded(
                   child: FadeTransition(
                     opacity: _fadeAnimation,
@@ -805,17 +691,9 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
                                           : 48,
                                     ),
 
-                                    // ------------------------------------------------
-                                    // ROUND LOGO (scissor icon removed from here)
-                                    // ------------------------------------------------
-
                                     _logoBadge(size: 92),
 
                                     const SizedBox(height: 18),
-
-                                    // ------------------------------------------------
-                                    // FASHION LINE
-                                    // ------------------------------------------------
 
                                     Row(
                                       children: [
@@ -855,10 +733,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
 
                                     const SizedBox(height: 25),
 
-                                    // ------------------------------------------------
-                                    // TITLE
-                                    // ------------------------------------------------
-
                                     const Text(
                                       "Verify Your Account",
                                       textAlign: TextAlign.center,
@@ -894,10 +768,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
                                     ),
 
                                     const SizedBox(height: 35),
-
-                                    // ------------------------------------------------
-                                    // OTP LABEL
-                                    // ------------------------------------------------
 
                                     const Align(
                                       alignment:
@@ -937,17 +807,9 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
 
                                     const SizedBox(height: 30),
 
-                                    // ------------------------------------------------
-                                    // VERIFY BUTTON
-                                    // ------------------------------------------------
-
                                     _verifyButton(),
 
                                     const SizedBox(height: 23),
-
-                                    // ------------------------------------------------
-                                    // RESEND
-                                    // ------------------------------------------------
 
                                     TextButton(
                                       onPressed: () {
@@ -1005,10 +867,6 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
                                     ),
 
                                     const SizedBox(height: 35),
-
-                                    // ------------------------------------------------
-                                    // FOOTER
-                                    // ------------------------------------------------
 
                                     Row(
                                       mainAxisAlignment:
@@ -1109,10 +967,6 @@ class _FashionBackgroundPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.fill;
 
-    // ------------------------------------------------------------
-    // SOFT FASHION CIRCLE
-    // ------------------------------------------------------------
-
     paint.color = const Color(0xFF0B2220);
 
     canvas.drawCircle(
@@ -1120,10 +974,6 @@ class _FashionBackgroundPainter extends CustomPainter {
       size.width * 0.42,
       paint,
     );
-
-    // ------------------------------------------------------------
-    // DRESS SILHOUETTE
-    // ------------------------------------------------------------
 
     final dressPaint = Paint()
       ..color = const Color(0xFF102B29).withValues(alpha: 0.62)
@@ -1134,19 +984,10 @@ class _FashionBackgroundPainter extends CustomPainter {
     final cx = size.width * 0.82;
     final top = size.height * 0.24;
 
-    // Neck
     dressPath.moveTo(cx - 12, top);
-
-    // Left shoulder
     dressPath.lineTo(cx - 38, top + 20);
-
-    // Left arm
     dressPath.lineTo(cx - 55, top + 45);
-
-    // Waist
     dressPath.lineTo(cx - 25, top + 105);
-
-    // Skirt
     dressPath.lineTo(cx - 90, top + 255);
 
     dressPath.quadraticBezierTo(
@@ -1157,21 +998,13 @@ class _FashionBackgroundPainter extends CustomPainter {
     );
 
     dressPath.lineTo(cx + 25, top + 105);
-
-    // Right shoulder
     dressPath.lineTo(cx + 55, top + 45);
-
     dressPath.lineTo(cx + 38, top + 20);
-
     dressPath.lineTo(cx + 12, top);
 
     dressPath.close();
 
     canvas.drawPath(dressPath, dressPaint);
-
-    // ------------------------------------------------------------
-    // DRESS GOLD OUTLINE
-    // ------------------------------------------------------------
 
     final outlinePaint = Paint()
       ..color = const Color(0xFF18C7B7)
@@ -1180,10 +1013,6 @@ class _FashionBackgroundPainter extends CustomPainter {
       ..strokeWidth = 1.2;
 
     canvas.drawPath(dressPath, outlinePaint);
-
-    // ------------------------------------------------------------
-    // SCISSOR CUTTING LINE
-    // ------------------------------------------------------------
 
     final cutPaint = Paint()
       ..color = const Color(0xFFFFC44D)
@@ -1205,10 +1034,6 @@ class _FashionBackgroundPainter extends CustomPainter {
     }
 
     canvas.drawPath(cutPath, cutPaint);
-
-    // ------------------------------------------------------------
-    // FLOATING GOLD PARTICLES
-    // ------------------------------------------------------------
 
     final particlePaint = Paint();
 
@@ -1243,10 +1068,6 @@ class _FashionBackgroundPainter extends CustomPainter {
         particlePaint,
       );
     }
-
-    // ------------------------------------------------------------
-    // SMALL SCISSOR WATERMARK
-    // ------------------------------------------------------------
 
     final scissorPaint = Paint()
       ..color = const Color(0xFF18C7B7)
