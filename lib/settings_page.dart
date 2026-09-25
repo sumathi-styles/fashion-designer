@@ -3756,7 +3756,7 @@ Widget _buildQnaPanel() {
         const SizedBox(height: 10),
         const Center(
           child: Text(
-            'divyadeveloper2025@gmail.com',
+            '',
             style: TextStyle(
               fontSize: 11.5,
               color: AppColors.textLight,

@@ -882,7 +882,7 @@ class _OtpVerifyPageState extends State<OtpVerifyPage>
                                         ),
                                         const SizedBox(width: 8),
                                         const Text(
-                                          "SUMATHI STYLES",
+                                          "SUMATHI'S STYLES",
                                           style: TextStyle(
                                             color: greyText,
                                             fontSize: 11,

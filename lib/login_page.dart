@@ -200,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Very light admin-access icon (kept faint on purpose)
+          // Admin-access icon -> opens Admin Dashboard (kept faint on purpose)
           Positioned(
             top: 40,
             right: 16,
@@ -273,7 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "SUMATHI",
+                            "SUMATHI'S",
                             style: TextStyle(
                               color: lightTeal,
                               fontSize: 18,

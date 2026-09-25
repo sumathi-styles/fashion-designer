@@ -126,6 +126,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
   bool _placingOrder = false;
   String? _previewOrderId;
 
+  // The exact amount (in rupees) that Razorpay was told to charge for
+  // this checkout session. Locked in once at payment-start time so the
+  // amount saved to Firestore afterwards can never drift from what was
+  // actually charged, even if _total's inputs change in between.
+  double? _paidAmount;
+
   Future<String> _getOrGenerateOrderId() async {
     if (_previewOrderId != null) return _previewOrderId!;
     final db = FirebaseFirestore.instance;
@@ -415,8 +421,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
 
     try {
+      // Lock in the amount we're about to charge right now — this is
+      // the single source of truth for what gets saved to Firestore
+      // later, so it can never drift from what Razorpay actually charged.
+      _paidAmount = _total;
+
       // Razorpay expects paise.
-      final int amountInPaise = (_total * 100).round();
+      final int amountInPaise = (_paidAmount! * 100).round();
 
       final response = await http.post(
         Uri.parse(createOrderUrl),
@@ -589,7 +600,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     final db = FirebaseFirestore.instance;
 
-    final double orderTotal = _total;
+    // Use the amount that was actually locked in and charged via
+    // Razorpay — never recompute from _total here, since the cart/items
+    // could have changed in the time between starting payment and this
+    // callback firing, which was causing the wrong amount to be saved.
+    final double orderTotal = _paidAmount ?? _total;
     final phone = _phoneCtrl.text.trim();
 
     final orderId = await _getOrGenerateOrderId();
@@ -1246,6 +1261,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
                           errorBuilder: (_, __, ___) => _imageErrorBox(),
                         )
                       : Image.asset(
@@ -1253,6 +1269,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
                           errorBuilder: (_, __, ___) => _imageErrorBox(),
                         ),
                 ),
@@ -1302,13 +1319,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 _delivery == 0 ? 'FREE' : '₹${_delivery.toStringAsFixed(0)}',
                 valueColor: _delivery == 0 ? Colors.green : null,
               ),
-              if (_delivery > 0) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Free delivery on orders above ₹${freeDeliveryThreshold.toStringAsFixed(0)}',
-                  style: const TextStyle(fontSize: 10.5, color: AppColors.textLight),
-                ),
-              ],
               const Divider(height: 22),
               _priceRow(
                 'Total Amount',
@@ -1587,7 +1597,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         style: TextStyle(color: Color(0xFF2E7D32), fontSize: 11, fontWeight: FontWeight.w700),
                       ),
                     ),
-                  Icon(expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 20),
+                                     Icon(
+                    expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: Colors.white,
+                  ),
                 ],
               ),
             ),
