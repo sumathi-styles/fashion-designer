@@ -200,34 +200,9 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
 
-          // Admin-access icon -> opens Admin Dashboard (kept faint on purpose)
-          Positioned(
-            top: 40,
-            right: 16,
-            child: SafeArea(
-              child: Opacity(
-                opacity: 0.25,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(30),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AdminPage()),
-                    );
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Icon(
-                      Icons.admin_panel_settings_outlined,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
+          // ---------- MAIN CONTENT ----------
+          // Moved BEFORE the admin icon so the admin icon (below) renders
+          // on top and always receives the tap first.
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -509,6 +484,37 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ---------- ADMIN-ACCESS ICON ----------
+          // Moved to the LAST position in the Stack so it always renders
+          // on top of the main content and reliably receives the tap
+          // on the first try (kept visually faint on purpose).
+          Positioned(
+            top: 40,
+            right: 16,
+            child: SafeArea(
+              child: Opacity(
+                opacity: 0.25,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(30),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AdminPage()),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.admin_panel_settings_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
               ),
