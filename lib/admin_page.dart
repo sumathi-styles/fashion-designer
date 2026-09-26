@@ -40,8 +40,8 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
-  static const String adminEmail = 'admin@sumathisssstyles.com';
-  static const String adminPass = 'sumathiaccount@1999';
+  static const String adminEmail = 'admin@sumathi.com';
+  static const String adminPass = 'sumathi@1980';
   // ignore: unused_field
   static const String waNumber = '919876543210';
 
